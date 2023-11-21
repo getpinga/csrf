@@ -206,6 +206,40 @@ class Guard implements MiddlewareInterface
     {
         return bin2hex(random_bytes($this->strength));
     }
+    
+    /**
+     * Retrieve the CSRF token from the JSON body of the request.
+     * This method is intended to support requests with JSON-encoded bodies,
+     * allowing the extraction of CSRF tokens directly from the JSON payload.
+     * 
+     * @param ServerRequestInterface $request The PSR-7 request object.
+     * 
+     * @return array|null Returns an array with two elements, the CSRF token name and value,
+     *                    or null if the tokens are not present in the JSON body.
+     * 
+     * @throws Exception If there is an error in parsing the JSON body.
+     */
+    protected function retrieveTokenFromJsonBody(ServerRequestInterface $request)
+    {
+        $contentType = $request->getHeaderLine('Content-Type');
+        
+        // Check if Content-Type is application/json
+        if (stripos($contentType, 'application/json') !== false) {
+            $body = (string)$request->getBody();
+            $data = json_decode($body, true);
+
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $name = $data[$this->getTokenNameKey()] ?? null;
+                $value = $data[$this->getTokenValueKey()] ?? null;
+
+                if ($name !== null && $value !== null) {
+                    return [$name, $value];
+                }
+            }
+        }
+
+        return [null, null];
+    }
 
     /**
      * @return array
@@ -239,12 +273,23 @@ class Guard implements MiddlewareInterface
      */
     public function validateToken(string $name, string $value): bool
     {
+        // First, try to validate tokens from JSON body
+        [$jsonName, $jsonValue] = $this->retrieveTokenFromJsonBody($this->request);
+
+        if ($jsonName !== null && $jsonValue !== null) {
+            if (!isset($this->storage[$jsonName])) {
+                return false;
+            }
+            $jsonToken = $this->storage[$jsonName];
+            return hash_equals($jsonToken, $this->unmaskToken($jsonValue));
+        }
+
+        // Fallback to standard form validation
         if (!isset($this->storage[$name])) {
             return false;
         }
 
         $token = $this->storage[$name];
-
         return hash_equals($token, $this->unmaskToken($value));
     }
 

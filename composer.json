@@ -1,7 +1,7 @@
 {
-    "name": "slim/csrf",
+    "name": "pinga/csrf",
     "type": "library",
-    "description": "Slim Framework 4 CSRF protection PSR-15 middleware",
+    "description": "Forked version of Slim CSRF with JSON support",
     "keywords": ["slim","framework","middleware","csrf"],
     "homepage": "https://www.slimframework.com",
     "license": "MIT",
@@ -16,7 +16,7 @@
         "sort-packages": true
     },
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": "^8.1",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0",
@@ -27,6 +27,12 @@
         "phpspec/prophecy-phpunit": "^2.0",
         "phpunit/phpunit": "^9.6",
         "squizlabs/php_codesniffer": "^3.7"
+    },
+    "provide": {
+        "slim/csrf": "self.version"
+    },
+    "replace": {
+        "slim/csrf": "self.version"
     },
     "autoload": {
         "psr-4": {
