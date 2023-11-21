@@ -271,10 +271,10 @@ class Guard implements MiddlewareInterface
      *
      * @return bool
      */
-    public function validateToken(string $name, string $value): bool
+    public function validateToken(string $name, string $value, ServerRequestInterface $request): bool
     {
         // First, try to validate tokens from JSON body
-        [$jsonName, $jsonValue] = $this->retrieveTokenFromJsonBody($this->request);
+        [$jsonName, $jsonValue] = $this->retrieveTokenFromJsonBody($request);
 
         if ($jsonName !== null && $jsonValue !== null) {
             if (!isset($this->storage[$jsonName])) {
@@ -492,7 +492,7 @@ class Guard implements MiddlewareInterface
         }
 
         if (in_array($request->getMethod(), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
-            $isValid = $this->validateToken((string) $name, (string) $value);
+            $isValid = $this->validateToken((string) $name, (string) $value, $request);
             if ($isValid && !$this->persistentTokenMode) {
                 // successfully validated token, so delete it if not in persistentTokenMode
                 $this->removeTokenFromStorage($name);
